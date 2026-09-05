@@ -156,21 +156,7 @@ jobs:
           chmod 600 ~/.hermes/.env
           echo '✅ Wrote ~/.hermes/.env from secrets'
 
-          # 4. Install MCP servers
-          #    CodeGraph CLI (MCP server: codegraph serve --mcp)
-          npm install -g @colbymchenry/codegraph 2>/dev/null || npm install -g codegraph 2>/dev/null || true
-          if command -v codegraph >/dev/null 2>&1; then
-            (cd /home/runner/my-tail && codegraph init --index) || true
-            echo '✅ CodeGraph installed + indexed'
-          else
-            echo '⚠️ codegraph CLI not installed — skipping'
-          fi
-
-          #    Context7 MCP (documentation lookup)
-          hermes mcp install context7 2>&1 || true
-          echo '✅ Context7 MCP installed'
-
-          # 5. Start the Hermes messaging gateway (Telegram) in the background.
+          # 4. Start the Hermes messaging gateway (Telegram) in the background.
           nohup hermes gateway run --replace > /tmp/hermes-gateway.log 2>&1 &
           sleep 6
           if curl -fsS http://127.0.0.1:20128 > /dev/null 2>&1; then
@@ -178,16 +164,7 @@ jobs:
           fi
           echo '✅ Hermes gateway launch attempted (logs: /tmp/hermes-gateway.log)'
 
-          # 6. Send the one-time seed message (welcome/summary) to Telegram.
-          SEED_FILE="${GITHUB_WORKSPACE:-.}/hermes/seed-message.txt"
-          if [ -f "$SEED_FILE" ]; then
-            sleep 3
-            hermes send --to telegram --file "$SEED_FILE" \
-              && echo '✅ Seed message sent to Telegram' \
-              || echo '⚠️ Seed message failed to send'
-          else
-            echo '⚠️ hermes/seed-message.txt not found — skipping seed message'
-          fi
+
 
       - name: 10. Server Keep-Alive (5h 55m)
         run: |
