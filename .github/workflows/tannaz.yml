@@ -160,6 +160,13 @@ jobs:
           else
             echo '⚠️ hermes/skills not found in repo'
           fi
+          # Restore SOUL.md
+          if [ -f "${GITHUB_WORKSPACE:-.}/hermes/SOUL.md" ]; then
+            cp "${GITHUB_WORKSPACE:-.}/hermes/SOUL.md" ~/.hermes/SOUL.md
+            echo '✅ Restored ~/.hermes/SOUL.md from repo'
+          else
+            echo '⚠️ hermes/SOUL.md not found in repo'
+          fi
 
           # 3. Write the .env with secrets pulled from GitHub Secrets.
           {
@@ -200,7 +207,7 @@ jobs:
           git config user.email "haileen-kocholoo@users.noreply.github.com"
           # Authenticate with PAT for push
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/haileen-kocholoo/my-tail.git"
-          # Copy updated memories and skills from ~/.hermes back to repo
+          # Copy updated memories, skills, and SOUL.md from ~/.hermes back to repo
           if [ -d ~/.hermes/memories ]; then
             cp -r ~/.hermes/memories/* hermes/memories/ 2>/dev/null || true
             echo '✅ Copied memories to repo'
@@ -209,12 +216,16 @@ jobs:
             cp -r ~/.hermes/skills/* hermes/skills/ 2>/dev/null || true
             echo '✅ Copied skills to repo'
           fi
+          if [ -f ~/.hermes/SOUL.md ]; then
+            cp ~/.hermes/SOUL.md hermes/SOUL.md
+            echo '✅ Copied SOUL.md to repo'
+          fi
           # Check if there are changes to commit
           if git diff --quiet && git diff --cached --quiet; then
             echo 'ℹ️ No changes to commit'
           else
-            git add hermes/memories/ hermes/skills/
-            git commit -m "Sync Hermes memories & skills from tannaz instance"
+            git add hermes/memories/ hermes/skills/ hermes/SOUL.md
+            git commit -m "Sync Hermes memories, skills & SOUL.md from tannaz instance"
             git push origin "${{ github.ref_name }}" || echo '⚠️ Push failed — changes saved locally'
             echo '✅ Hermes memories & skills synced to GitHub'
           fi
