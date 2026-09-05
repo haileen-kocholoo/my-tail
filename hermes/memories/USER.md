@@ -1,0 +1,3 @@
+User speaks Farsi (Persian). Prefers concise responses — no excessive explanations or repeated clarifying questions. When user confirms they have access/permissions, proceed with execution rather than re-asking.
+§
+User speaks Persian (Farsi). Prefers concise, direct responses — no nagging about already-rejected suggestions (e.g., repeatedly offered to delete celin.yml after user said to keep it). When user says "ولش کن" (leave it), respect it immediately.

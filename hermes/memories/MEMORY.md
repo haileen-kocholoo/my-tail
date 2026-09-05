@@ -1,0 +1,5 @@
+Always verify git remote ownership before pushing. After cloning a fork, run `git remote -v` and confirm `origin` matches the authenticated user's account (`gh auth status`). Never push to `upstream` — it causes 403 errors. The user's "our repo" or "my repo" always means their fork, not the upstream original.
+§
+GitHub repo `haileen-kocholoo/my-tail` — default branch is `celin` (not `main`). GitHub Actions only reads workflows from the default branch. Three workflows: celin (h-dashboard), my-tail, tannaz. Secrets: HERMES_CUSTOM_API_KEY, MY_PAT, RUNNER_PASSWORD, TAILSCALE_AUTHKEY, TELEGRAM_ALLOWED_USERS, TELEGRAM_BOT_TOKEN_CELIN, TELEGRAM_BOT_TOKEN_TANNAZ.
+§
+Project my-tail: Tailscale exit node + 9router (port 20128) + Hermes Agent + Telegram bot. No PHP/Docker/Laravel. Each workflow instance (celin, tannaz, my-tail) uses its own TELEGRAM_BOT_TOKEN_{WF_NAME} secret.

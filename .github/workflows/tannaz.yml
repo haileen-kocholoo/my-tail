@@ -136,13 +136,29 @@ jobs:
           echo '✅ Hermes Agent installed'
           export PATH="$HOME/.hermes/bin:$PATH"
 
-          # 2. Restore the Hermes config
+          # 2. Restore the Hermes config, memories, and skills from repo
           mkdir -p ~/.hermes
+          mkdir -p ~/.hermes/memories
+          mkdir -p ~/.hermes/skills
           if [ -f "${GITHUB_WORKSPACE:-.}/hermes/config.yaml" ]; then
             cp "${GITHUB_WORKSPACE:-.}/hermes/config.yaml" ~/.hermes/config.yaml
             echo '✅ Restored ~/.hermes/config.yaml'
           else
             echo '⚠️ hermes/config.yaml not found in repo — using default config'
+          fi
+          # Restore memories
+          if [ -d "${GITHUB_WORKSPACE:-.}/hermes/memories" ]; then
+            cp -r "${GITHUB_WORKSPACE:-.}/hermes/memories/"* ~/.hermes/memories/ 2>/dev/null || true
+            echo '✅ Restored ~/.hermes/memories from repo'
+          else
+            echo '⚠️ hermes/memories not found in repo'
+          fi
+          # Restore skills
+          if [ -d "${GITHUB_WORKSPACE:-.}/hermes/skills" ]; then
+            cp -r "${GITHUB_WORKSPACE:-.}/hermes/skills/"* ~/.hermes/skills/ 2>/dev/null || true
+            echo '✅ Restored ~/.hermes/skills from repo'
+          else
+            echo '⚠️ hermes/skills not found in repo'
           fi
 
           # 3. Write the .env with secrets pulled from GitHub Secrets.
@@ -173,7 +189,37 @@ jobs:
             echo "[$i/355] Server is active (SSH + 9router on port 20128)..."
           done
 
-      - name: 11. Tailscale Logout (cleanup on shutdown)
+      - name: 11. Sync Hermes memories & skills back to GitHub
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.MY_PAT }}
+        run: |
+          cd "${GITHUB_WORKSPACE:-.}"
+          # Configure git for committing
+          git config user.name "haileen-kocholoo"
+          git config user.email "haileen-kocholoo@users.noreply.github.com"
+          # Authenticate with PAT for push
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/haileen-kocholoo/my-tail.git"
+          # Copy updated memories and skills from ~/.hermes back to repo
+          if [ -d ~/.hermes/memories ]; then
+            cp -r ~/.hermes/memories/* hermes/memories/ 2>/dev/null || true
+            echo '✅ Copied memories to repo'
+          fi
+          if [ -d ~/.hermes/skills ]; then
+            cp -r ~/.hermes/skills/* hermes/skills/ 2>/dev/null || true
+            echo '✅ Copied skills to repo'
+          fi
+          # Check if there are changes to commit
+          if git diff --quiet && git diff --cached --quiet; then
+            echo 'ℹ️ No changes to commit'
+          else
+            git add hermes/memories/ hermes/skills/
+            git commit -m "Sync Hermes memories & skills from tannaz instance"
+            git push origin "${{ github.ref_name }}" || echo '⚠️ Push failed — changes saved locally'
+            echo '✅ Hermes memories & skills synced to GitHub'
+          fi
+
+      - name: 12. Tailscale Logout (cleanup on shutdown)
         if: always()
         run: |
           sudo tailscale logout || true
